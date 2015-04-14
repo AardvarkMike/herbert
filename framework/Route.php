@@ -25,6 +25,7 @@ class Route {
     private $routeVars;
     private $routeNames;
     private $regex = '/(?::[a-z][a-z0-9_]*)/';
+    private $defaultNamespace;
 
     /**
      * @param \Herbert\Framework\Plugin $plugin
@@ -39,6 +40,16 @@ class Route {
     }
 
     /**
+     * Sets a default namespace for routes 
+     *
+     * @param $namespace
+     */
+    private function setDefaultNamespace($namespace)
+    {
+        $this->defaultNamespace = trim($namespace, '\\');
+    }
+
+    /**
      * Adds the route to wordpress 'add_action'
      * before calling 'addRoute'
      *
@@ -47,6 +58,10 @@ class Route {
      */
     private function add($attrs, $method)
     {
+        if (!empty($attrs['uses'])&& $this->defaultNamespace && class_exists(split('@', $this->defaultNamespace . '\\' . $attrs['uses'])[0]) ) {
+            $attrs['uses'] = $this->defaultNamespace . '\\' . $attrs['uses'];
+        }  
+
         $this->routes[$method][$attrs['as']] = $attrs;
         \add_action('init', function () use ($attrs, $method)
         {
